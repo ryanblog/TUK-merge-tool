@@ -2,30 +2,55 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Dubai / Abu Dhabi Data Merge Tool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Focus Media · Data Merge Tool</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  body{font-family:-apple-system,system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 20px;color:#1d1d1f}
-  h1{font-size:20px} .sub{color:#86868b;font-size:13px;margin-top:-6px}
-  #drop{border:2px dashed #c7c7cc;border-radius:14px;padding:36px;text-align:center;color:#86868b;cursor:pointer;transition:.2s;margin:20px 0}
-  #drop.hl{border-color:#0071e3;background:#f0f7ff;color:#0071e3}
-  .files{font-size:13px;margin:10px 0} .files div{padding:2px 0}
-  button{background:#0071e3;color:#fff;border:0;border-radius:10px;padding:11px 20px;font-size:15px;cursor:pointer}
-  button:disabled{background:#c7c7cc;cursor:not-allowed}
-  .dl{background:#34c759;margin:6px 8px 6px 0}
-  #log{background:#1d1d1f;color:#e5e5e7;font:12px/1.6 ui-monospace,Menlo,monospace;border-radius:10px;padding:14px;margin-top:18px;white-space:pre-wrap;min-height:60px}
-  .warn{color:#ffd60a} .hd{color:#0a84ff;font-weight:bold} .ok{color:#34c759}
+  :root{--amber:#C8860D;--amber-dark:#a8710b;--dark:#161616;--page:#f4f4f5;--ink:#1d1d1f;--muted:#6e6e73}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,system-ui,"Segoe UI",sans-serif;background:var(--page);color:var(--ink);display:flex;justify-content:center;padding:40px 16px}
+  .card{width:100%;max-width:720px;background:#fff;border-radius:18px;box-shadow:0 6px 30px rgba(0,0,0,.08);overflow:hidden}
+  .header{background:var(--dark);border-bottom:3px solid var(--amber);padding:26px;text-align:center}
+  .header img{max-height:58px;max-width:90%;vertical-align:middle}
+  .body{padding:30px 34px 36px}
+  h1{font-size:19px;text-align:center;margin:0 0 6px}
+  .sub{color:var(--muted);font-size:13px;text-align:center;margin:0 0 22px;line-height:1.5}
+  #drop{border:2px dashed #d2d2d7;border-radius:14px;padding:38px;text-align:center;color:var(--muted);cursor:pointer;transition:.2s;font-size:15px}
+  #drop.hl{border-color:var(--amber);background:#fdf6e9;color:var(--amber-dark)}
+  .files{font-size:13px;margin:12px 2px;color:var(--ink)} .files div{padding:2px 0}
+  .actions{text-align:center;margin-top:18px}
+  button{border:0;border-radius:11px;padding:12px 26px;font-size:15px;font-weight:600;cursor:pointer;transition:.15s}
+  #run{background:var(--amber);color:#fff} #run:hover:not(:disabled){background:var(--amber-dark)}
+  #run:disabled{background:#dcdce0;color:#9a9aa0;cursor:not-allowed}
+  #downloads{text-align:center;margin-top:16px}
+  .dl{background:#2e9e5b;color:#fff;margin:6px 6px} .dl:hover{background:#26834b}
+  .logwrap{margin-top:24px;background:var(--dark);border-radius:14px;overflow:hidden}
+  .loglabel{font:600 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase;color:#8a8a8f;padding:12px 16px 0}
+  #log{font:12px/1.65 ui-monospace,Menlo,monospace;color:#e6e6e7;padding:8px 16px 16px;white-space:pre-wrap;min-height:54px;max-height:420px;overflow:auto}
+  .warn{color:#ffd60a} .hd{color:#e6b84d;font-weight:bold} .ok{color:#4cd07d}
+  .foot{text-align:center;color:#a1a1a6;font-size:11px;margin-top:20px}
 </style>
 </head>
 <body>
-  <h1>Dubai / Abu Dhabi Data Merge Tool</h1>
-  <p class="sub">Drop the 4 exported files (building lists & point lists for both cities). Files stay on your machine; nothing is uploaded.</p>
-  <div id="drop">Drop the 4 .xlsx files here, or click to choose</div>
-  <input id="file" type="file" accept=".xlsx" multiple hidden>
-  <div class="files" id="filelist"></div>
-  <button id="run" disabled>Merge</button>
-  <div id="downloads" style="margin-top:14px"></div>
-  <div id="log">Waiting for files…</div>
+  <div class="card">
+    <div class="header">
+      <img src="logo.png" alt="Focus Media" onerror="this.style.display='none'">
+    </div>
+    <div class="body">
+      <h1>Dubai / Abu Dhabi Data Merge Tool</h1>
+      <p class="sub">Drop the 4 exported files (building lists & point lists for both cities).<br>Files stay on your machine — nothing is uploaded.</p>
+      <div id="drop">Drop the 4 .xlsx files here, or click to choose</div>
+      <input id="file" type="file" accept=".xlsx" multiple hidden>
+      <div class="files" id="filelist"></div>
+      <div class="actions"><button id="run" disabled>Merge</button></div>
+      <div id="downloads"></div>
+      <div class="logwrap">
+        <div class="loglabel">Log</div>
+        <div id="log">Waiting for files…</div>
+      </div>
+      <div class="foot">Focus Media · Middle East &amp; Africa Region</div>
+    </div>
+  </div>
 <script>
 // ===== CONFIG =====
 const KEEP_BUILDING=["Project ID","Project Name","City","Project Type","Level","District","Building Quantity","Floor Quantity","Stay Rate","Year Built","Building Appearance","Additional Points","Location/Region","32-V","32-H","25","55","Total Screens","Address","Project Status","Restricted Industries","Permitted Ad Words","GoogleMapURL"];
@@ -34,10 +59,10 @@ const KEEP_SALES=["Project Name","City","Project Type","Level","District","Build
 const ALIASES={"adress":"Address","projectname":"Project Name"};
 const DEVICE_MAP={"25":"[Smart Interactive] 25 Inch","32-H":"[Horizontal] 32 Inch","32-V":"[Smart Interactive] 32 Inch","55":"[Smart Interactive] 55 Inch"};
 const INSTALLED="installed", NORMAL="normal";
-const STATUS_OK=["signed","expired"];   // Sales List: Project Status allowed values
-const EXCLUDE_INDUSTRY="camisole";   // Sales List: skip projects whose Restricted Industries contains this
-const EXCLUDE_WALL="wallpaper";      // Sales List: skip points whose Wall Type contains this
-const EXCLUDE_NAME="focusmedia";     // Sales List: skip projects whose Project Name contains this (loose)
+const STATUS_OK=["signed","expired"];
+const EXCLUDE_INDUSTRY="camisole";
+const EXCLUDE_WALL="wallpaper";
+const EXCLUDE_NAME="focusmedia";
 const BUILDING_SIG=["floor quantity","year built","building quantity"];
 const POINT_SIG=["screen point id","install date","sn"];
 // ==================
@@ -128,7 +153,6 @@ $("run").onclick=async()=>{
     log(`• ${f.name} → ${kind==="building"?"Building list":"Point list"}${city?" | "+city:""}`);
     groups[kind].push({f,headers,data:rows.slice(1),city});
   }
-  // counts (all installed)  +  countsSales (Installed + Normal + not Wallpaper)
   const counts={},countsByName={},countsSales={},countsSalesByName={};
   let exWall=0, exInsp=0;
   for(const g of groups.point){
@@ -158,7 +182,6 @@ $("run").onclick=async()=>{
   }
   log(`  → Sales screens excluded: ${exWall} (Wall Type = Wallpaper), ${exInsp} (Inspecting ≠ Normal).`,"ok");
   const lookup=(cmap,cnmap,k,nk)=>(k&&cmap[k])?cmap[k]:((nk&&cnmap[nk])?cnmap[nk]:{});
-  // PROJECT LIST (building) — counts = all installed
   {const keep=KEEP_BUILDING,m=lut(keep);let all=[];
    for(const g of groups.building){
      const ci={};keep.forEach(c=>ci[c]=g.headers.findIndex(h=>m[loose(h)]===c));
@@ -173,14 +196,12 @@ $("run").onclick=async()=>{
        o["Total Screens"]=total; all.push(o);
      }
    } if(all.length)emit("building",all,keep);}
-  // POINT LIST — keep original City per row
   {const keep=KEEP_POINT,m=lut(keep);let all=[];
    for(const g of groups.point){
      const ci={};keep.forEach(c=>ci[c]=g.headers.findIndex(h=>m[loose(h)]===c));
      keep.forEach(c=>{if(ci[c]<0)log(`  ⚠️ ${g.f.name} missing "${c}" (left blank).`,"warn");});
      for(const r of g.data)all.push(rowFrom(r,keep,ci,g.city));
    } if(all.length)emit("point",all,keep);}
-  // SALES LIST — projects: not Camisole, Status in {Signed,Expired}, name≠Focus Media, Total Screens>0; screens: Installed+Normal+not Wallpaper
   {const keep=KEEP_SALES,m=lut(keep);let all=[];let exCam=0,exSign=0,exName=0,exZero=0;
    for(const g of groups.building){
      const ci={};keep.forEach(c=>ci[c]=g.headers.findIndex(h=>m[loose(h)]===c));
